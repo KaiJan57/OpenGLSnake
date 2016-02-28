@@ -1,0 +1,37 @@
+#c##Snake Konfigurationsdatei
+#c##Definiert die Größe des Spielfelds (BreitexLänge)
+Size:
+40x40
+#c##Definiert die Größe der Blöcke
+BlockSize:
+10x10
+#c##Definiert die Geschwindigkeit (Je höher, desto langsamer)
+Speed:
+100
+#c##Definiert die Existenz der Wände (bei true stirbt der Wurm an der Wand, bei false nicht)
+Walls:
+false
+#c##Definiert die Anzahl an Futterpunkten
+AppleCount:
+2
+#c##Definiert die Wahrscheinlichkeit dafür, dass sich der Wert der Futterpunkte NICHT ändert, d. h. je höher, desto unwahrscheinlicher
+AppleSpawn:
+0
+#c##Definiert den Wertebereich der Futterpunkte (minimal-maximal)
+AppleValues:
+0-9
+#c##Stellt den Zufallsgenerator ein ("time" für die Zeit)
+Seed:
+time
+#c##Definiert die Farbe der Wände. Höhe von 0.000 bis 1.000. Punkte dienen als Komma. Format: rot|grün|blau
+Border:
+0.1|0.5|0.4
+#c##Definiert die Farbe des Hintergrunds
+Background:
+0.0|0.0|0.0
+#c##Definiert die Farbe des Wurmkörpers
+Worm:
+0.0|1.0|0.0
+#c##Definiert die Farbe des Wurmkopfes
+Head:
+0.0|0.0|1.0
