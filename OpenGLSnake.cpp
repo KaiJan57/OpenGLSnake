@@ -1,3 +1,8 @@
+/*
+Needs the librarys
+- freeglut (http://freeglut.sourceforge.net/)
+- glew     (http://glew.sourceforge.net/)
+*/
 #pragma region IncludesAndUsings
 //some includes and using namespaces
 #include <stdio.h>
@@ -10,17 +15,20 @@
 #include <fstream>
 #include <string>
 using namespace std;
+using namespace std::chrono;
 #pragma endregion
 
 #pragma region constants
 //this is the "Paused-Title"
-static const char *titlePaused = "Snake - Paused";
+static const char *titlePaused = "Snake - Paused. Press a button to resume.";
 //this is the "Playing-Title"
 static const char *titlePlaying = "Snake - Score: ";
+//this is the "Lost-but-I-want-to-see-the-score-Title"
+static const char *titleLost = "Snake - Lost. Score: ";
 //this is the "Default-Title"
 static const char *titleDefault = "Snake";
 //this is the "Ready-Title"
-static const char *titleReady = "Press a button to start";
+static const char *titleReady = "Snake - Press a button to start";
 //this is the default config file
 static const string DefaultConfig = 
 "#c##Snake Configuration file\n"
@@ -30,7 +38,7 @@ static const string DefaultConfig =
 "#c##Defines the size of the blocks in pixels\n"
 "BlockSize:\n"
 "10x10\n"
-"#c##Defines the speed (the higher the value, the slower the game)\n"
+"#c##Defines the speed (the higher the value, the slower the game)[Sets the time to wait between the ticks in milliseconds]\n"
 "Speed:\n"
 "100\n"
 "#c##Defines the existence of the walls (true = worm dies on walls, false = worm survives the walls)\n"
@@ -42,10 +50,13 @@ static const string DefaultConfig =
 "#c##The higher this value, the fewer often the value of a foodpoint changes\n"
 "AppleSpawn:\n"
 "0\n"
+"#c##Defines The time to change the position of a foodpoint in gameticks. false for never.\n"
+"ApplePos:\n"
+"false\n"
 "#c##Defines the range of the foodvalues (minimum-maximum)\n"
 "AppleValues:\n"
 "0-9\n"
-"#c##Sets the randomizer (\"time\" for the time)\n"
+"#c##Defines the seed for the randomizer (\"time\" for the time)\n"
 "Seed:\n"
 "time\n"
 "#c##Defines the Color of the Borders. Minimum: 0.000 Maximum: 1.000. Dots act as comma. Format: red|green|blue\n"
@@ -71,6 +82,7 @@ struct Point {
 
 struct FoodPoint : Point {
 	int Value = 0;
+	int Age = 0;
 };
 
 struct Color {
@@ -111,6 +123,7 @@ int blockwidth;
 int blockheight;
 int applecount;
 int applespawn;
+int applepos;
 int applemin;
 int applemax;
 long speed;
@@ -303,15 +316,32 @@ static void drawFood() {
 #pragma region GameLogics
 static void UpdateFoodPoints() {
 	//everyting needed to update the food points
-	//remove invisible points
+	//remove invisible points and update the age
 	vector<FoodPoint> ok;
 	for (vector<FoodPoint>::iterator i = FoodPoints.begin(); i != FoodPoints.end(); ++i) {
 		if (i->X < width || i->Y < height) {
 			//this point is ok
 			FoodPoint temp;
+			//set coordinates
 			temp.X = i->X;
 			temp.Y = i->Y;
+			//check if age counting is enabled
+			//if the setting is -1, ignore
+			if (applepos != -1) {
+				//increase age
+				temp.Age = i->Age + 1;
+				//check if too old
+				if (temp.Age >= applepos) {
+					//too old
+					//create a new position
+					temp.X = rand() % ((width - 1) - 1) + 1;
+					temp.Y = rand() % ((height - 1) - 1) + 1;
+					//and reset the age
+					temp.Age = 0;
+				}
+			}
 			temp.Value = i->Value;
+			//add to "ok" list
 			ok.push_back(temp);
 		}
 	}
@@ -385,6 +415,7 @@ static void applyRenderSettings() {
 	Walls = false;
 	applecount = 2;
 	applespawn = 0;
+	applepos = -1;
 	applemin = 0;
 	applemax = 9;
 	srand(time(0));
@@ -500,7 +531,20 @@ static void applyRenderSettings() {
 						}
 					}
 
-					//seventh setting: min and max value for an apple
+					//seventh setting: time of changing the position of the apples
+					if (line == "ApplePos:") {
+						if (temp1[i + 1] == "false") {
+							applepos = -1;
+						}
+						else {
+							int check = stoi(temp1[i + 1]);
+							if (check > -1) {
+								applepos = check;
+							}
+						}
+					}
+
+					//eighth setting: min and max value for an apple
 					if (line == "AppleValues:") {
 						//values are sperated by "-"
 						string temp_ = temp1[i + 1].substr(0, temp1[i + 1].find("-"));
@@ -513,14 +557,14 @@ static void applyRenderSettings() {
 						}
 					}
 
-					//eight setting: seed for the randomizer
+					//nineth setting: seed for the randomizer
 					if (line == "Seed:") {
 						if (temp1[i + 1] != "time") {
 							srand(stoi(temp1[i + 1]));
 						}
 					}
 
-					//nineth - 12th setting: Colors
+					//tenth - 12th setting: Colors
 					if (line == "Border:") {
 						Border = stoc(temp1[i + 1]);
 					}
@@ -541,7 +585,7 @@ static void applyRenderSettings() {
 		}
 		catch (const std::exception&)
 		{
-			//oups looks like there was an error... who cares the default settings were defined up there
+			//oups looks like there was an error... who cares, the default settings were defined up there
 		}
 	}
 	else {
@@ -589,7 +633,7 @@ static void Lost() {
 	//tell the rendering section to render the "Pause-Screen"
 	renderMode = Pause;
 	//and set the last update to now, so the "Pause-Screen" is shown for a second
-	lastupdate = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
+	lastupdate = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch()).count();
 }
 
 static void moveWorm(Direction direction) {
@@ -708,8 +752,6 @@ static void RenderGame() {
 
 static void RenderMenu() {
 	//render the menu:
-	//set window title
-	glutSetWindowTitle(titleReady);
 	//clear screen
 	glClear(GL_COLOR_BUFFER_BIT);
 	//do some gl stuff
@@ -732,10 +774,8 @@ static void Render() {
 	case Pause: {
 		//if it is "Pause" it means pause OR stop the screen if the player lost, so the player knows why the game was lost
 		RenderGame();
-		long now = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
-		if (lastupdate + 1000 <= now) {
-			initGame();
-		}
+		//show the "Lost-Title"
+		glutSetWindowTitle(string(titleLost + to_string(score)).c_str());
 		break;
 	}
 	case Menu: {
@@ -746,7 +786,8 @@ static void Render() {
 	case Game: {
 		//here the game plays all through the logics and renders everything
 		RenderGame();
-		long now = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
+		//long now = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count(); <-- doesn't work for some reason...
+		long now = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch()).count();
 		//speed is the user-defined game speed
 		if (lastupdate + speed <= now) {
 			lastupdate = now;
@@ -764,6 +805,20 @@ static void Render() {
 
 #pragma region Callbacks
 static void Button(int key, int x, int y) {
+	if (renderMode == Menu || renderMode == Pause) {
+		//if user is in menu or lost-screen and pressed any button, start the game
+		//let the user escape after a second
+		if (renderMode == Pause) {
+			long now = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch()).count();
+			if (lastupdate + 1000 > now) {
+				return;
+			}
+		}
+		initGame();
+		glutSetWindowTitle(string(titlePlaying + to_string(score)).c_str());
+		renderMode = Game;
+		return;
+	}
 	if (changeDirection == Paused) {
 		//if button is pressed and game is paused, resume the game
 		changeDirection = pauseDirection;
@@ -809,8 +864,16 @@ static void KeyBoard(unsigned char c, int x, int y) {
 		//if pressed X, exit the program
 		exit(0);
 	}
-	if (renderMode == Menu) {
-		//if user is in menu and pressed any button, start the game
+	if (renderMode == Menu || renderMode == Pause) {
+		//if user is in menu or lost-screen and pressed any button, start the game
+		//let the user escape after a second
+		if (renderMode == Pause) {
+			long now = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch()).count();
+			if (lastupdate + 1000 > now) {
+				return;
+			}
+		}
+		initGame();
 		glutSetWindowTitle(string(titlePlaying + to_string(score)).c_str());
 		renderMode = Game;
 		return;
@@ -862,6 +925,8 @@ int main(int argc, char** argv)
 	glutInitWindowSize(width * blockwidth, height * blockheight);
 	//glutInitWindowPosition(100, 100);
 	glutCreateWindow(titleDefault);
+	//set window title
+	glutSetWindowTitle(titleReady);
 
 	InitializeGlutCallbacks();
 

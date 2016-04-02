@@ -1,37 +1,40 @@
-#c##Snake Konfigurationsdatei
-#c##Definiert die Größe des Spielfelds (BreitexLänge)
+#c##Snake Configuration file
+#c##Defines the size of the field (WIDTHxLENGTH)
 Size:
 40x40
-#c##Definiert die Größe der Blöcke
+#c##Defines the size of the blocks in pixels
 BlockSize:
 10x10
-#c##Definiert die Geschwindigkeit (Je höher, desto langsamer)
+#c##Defines the speed (the higher the value, the slower the game)[Sets the time to wait between the ticks in milliseconds]
 Speed:
 100
-#c##Definiert die Existenz der Wände (bei true stirbt der Wurm an der Wand, bei false nicht)
+#c##Defines the existence of the walls (true = worm dies on walls, false = worm survives the walls)
 Walls:
 false
-#c##Definiert die Anzahl an Futterpunkten
+#c##Defines the count of foodpoints
 AppleCount:
 2
-#c##Definiert die Wahrscheinlichkeit dafür, dass sich der Wert der Futterpunkte NICHT ändert, d. h. je höher, desto unwahrscheinlicher
+#c##The higher this value, the fewer often the value of a foodpoint changes
 AppleSpawn:
 0
-#c##Definiert den Wertebereich der Futterpunkte (minimal-maximal)
+#c##Defines The time to change the position of a foodpoint in gameticks. false for never.
+ApplePos:
+100
+#c##Defines the range of the foodvalues (minimum-maximum)
 AppleValues:
 0-9
-#c##Stellt den Zufallsgenerator ein ("time" für die Zeit)
+#c##Defines the seed for the randomizer ("time" for the time)
 Seed:
 time
-#c##Definiert die Farbe der Wände. Höhe von 0.000 bis 1.000. Punkte dienen als Komma. Format: rot|grün|blau
+#c##Defines the Color of the Borders. Minimum: 0.000 Maximum: 1.000. Dots act as comma. Format: red|green|blue
 Border:
 0.1|0.5|0.4
-#c##Definiert die Farbe des Hintergrunds
+#c##Defines the Color of the Background
 Background:
 0.0|0.0|0.0
-#c##Definiert die Farbe des Wurmkörpers
+#c##Defines the Color of the Worm
 Worm:
 0.0|1.0|0.0
-#c##Definiert die Farbe des Wurmkopfes
+#c##Defines the Color of the Head
 Head:
-0.0|0.0|1.0
+1.0|0.0|0.0
